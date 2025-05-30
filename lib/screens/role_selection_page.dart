@@ -6,12 +6,15 @@ import 'guardian_register_page.dart';
 class RoleSelectionPage extends StatelessWidget {
   const RoleSelectionPage({super.key});
   final gunmetal = const Color(0xFF333333);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          const AnimatedBg(),
+          const AnimatedBackgroundWidget(
+            child: SizedBox.expand(), // Provide a non-null child!
+          ),
           SafeArea(
             child: Center(
               child: Column(
@@ -31,7 +34,7 @@ class RoleSelectionPage extends StatelessWidget {
                     'Please select your role',
                     style: TextStyle(
                       fontSize: 18,
-                      color: gunmetal,
+                      color: Color(0xFF333333),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -44,7 +47,7 @@ class RoleSelectionPage extends StatelessWidget {
                           'Patient',
                           Icons.person,
                           Colors.blue,
-                          () => Navigator.push(
+                              () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => const PatientPhoneVerificationPage()),
                           ),
@@ -55,7 +58,7 @@ class RoleSelectionPage extends StatelessWidget {
                           'Guardian',
                           Icons.family_restroom,
                           Colors.green,
-                          () => Navigator.push(
+                              () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => const GuardianRegisterPage()),
                           ),
@@ -73,12 +76,12 @@ class RoleSelectionPage extends StatelessWidget {
   }
 
   Widget _buildRoleButton(
-    BuildContext context,
-    String text,
-    IconData icon,
-    Color color,
-    VoidCallback onPressed,
-  ) {
+      BuildContext context,
+      String text,
+      IconData icon,
+      Color color,
+      VoidCallback onPressed,
+      ) {
     return SizedBox(
       width: double.infinity,
       height: 60,

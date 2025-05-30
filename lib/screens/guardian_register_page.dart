@@ -4,7 +4,6 @@ import '../services/database_service.dart';
 import 'guardian_login_page.dart';
 import '../widgets/animated_background.dart';
 
-
 class GuardianRegisterPage extends StatefulWidget {
   const GuardianRegisterPage({super.key});
 
@@ -24,7 +23,8 @@ class _GuardianRegisterPageState extends State<GuardianRegisterPage> {
     return Scaffold(
       body: Stack(
         children: [
-          const AnimatedBg(),
+          // Fixed background widget
+          const AnimatedBackgroundWidget(child: SizedBox.expand()),
           Center(
             child: SingleChildScrollView(
               child: Card(
@@ -65,6 +65,7 @@ class _GuardianRegisterPageState extends State<GuardianRegisterPage> {
                             if (_formKey.currentState!.validate()) {
                               try {
                                 await _authService.registerWithEmail('$patientId@guardian.com', password);
+                                // Fixed: call createGuardian
                                 await _dbService.createGuardian({
                                   'name': name,
                                   'patientId': patientId,

@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import 'guardian_dashboard.dart';
-import '../widgets/animated_background.dart';
 
 class GuardianLoginPage extends StatefulWidget {
   const GuardianLoginPage({super.key});
@@ -12,65 +9,84 @@ class GuardianLoginPage extends StatefulWidget {
 
 class _GuardianLoginPageState extends State<GuardianLoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _authService = AuthService();
+  String guardianId = '';
+  String password = '';
+  bool _isLoading = false;
 
-  String patientId = '', password = '';
+  void _login() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+
+    // TODO: Replace this with real authentication logic!
+    await Future.delayed(const Duration(seconds: 1));
+
+    // On success, navigate to HomePage with guardian info
+    Navigator.pushReplacementNamed(
+      context,
+      '/home',
+      arguments: {
+        'userId': guardianId,
+        'isPatient': false,
+      },
+    );
+
+    setState(() => _isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          const AnimatedBg(),
-          Center(
-            child: SingleChildScrollView(
-              child: Card(
-                margin: const EdgeInsets.all(24),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        const Text('Guardian Login', style: TextStyle(fontSize: 20)),
-                        TextFormField(
-                          decoration: const InputDecoration(labelText: 'Patient ID'),
-                          onChanged: (v) => patientId = v,
-                          validator: (v) => v!.isEmpty ? 'Enter patient ID' : null,
-                        ),
-                        TextFormField(
-                          decoration: const InputDecoration(labelText: 'Password'),
-                          obscureText: true,
-                          onChanged: (v) => password = v,
-                          validator: (v) => v!.isEmpty ? 'Enter password' : null,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          child: const Text('Login'),
-                          onPressed: () async {
-                            if (_formKey.currentState!.validate()) {
-                              try {
-                                await _authService.signInWithEmail('$patientId@guardian.com', password);
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => GuardianDashboard(patientId: patientId)),
-                                );
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Login failed: $e')),
-                                );
-                              }
-                            }
-                          },
-                        ),
-                      ],
+      appBar: AppBar(title: const Text('Guardian Login')),
+      body: Center(
+        child: Card(
+          margin: const EdgeInsets.all(24),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Guardian ID',
+                      prefixIcon: Icon(Icons.family_restroom),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (v) => guardianId = v,
+                    validator: (v) => v == null || v.isEmpty
+                        ? 'Please enter your Guardian ID'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: Icon(Icons.lock),
+                      border: OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                    onChanged: (v) => password = v,
+                    validator: (v) => v == null || v.length < 6
+                        ? 'Password must be at least 6 characters'
+                        : null,
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _login,
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Login', style: TextStyle(fontSize: 18)),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

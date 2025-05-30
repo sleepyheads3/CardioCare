@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import '../services/database_service.dart';
 import '../widgets/animated_background.dart';
 
@@ -17,8 +18,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
   @override
   void initState() {
     super.initState();
-    // Fetch patientId from database using mobile
-    // For demo, assume patientId is mobile (in real app, query DB)
+    // In a real app, use mobile to lookup patientId in DB. Here, just use mobile.
     patientId = widget.mobile;
   }
 
@@ -27,13 +27,16 @@ class _PatientDashboardState extends State<PatientDashboard> {
     return Scaffold(
       body: Stack(
         children: [
-          const AnimatedBg(),
+          const AnimatedBackgroundWidget(child: SizedBox.expand()),
           Center(
-            child: StreamBuilder(
+            child: StreamBuilder<DatabaseEvent>(
               stream: _dbService.getPatientVitals(patientId!).onValue,
               builder: (context, snapshot) {
-                if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
-                  final data = Map<String, dynamic>.from(snapshot.data!.snapshot.value as Map);
+                if (snapshot.hasData &&
+                    snapshot.data != null &&
+                    snapshot.data!.snapshot.value != null) {
+                  final event = snapshot.data!;
+                  final data = Map<String, dynamic>.from(event.snapshot.value as Map);
                   return Card(
                     margin: const EdgeInsets.all(24),
                     child: Padding(

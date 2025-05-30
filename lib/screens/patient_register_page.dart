@@ -32,7 +32,8 @@ class _PatientRegisterPageState extends State<PatientRegisterPage> {
     return Scaffold(
       body: Stack(
         children: [
-          const AnimatedBg(),
+          // Provide a non-null child for AnimatedBackgroundWidget
+          const AnimatedBackgroundWidget(child: SizedBox.expand()),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(

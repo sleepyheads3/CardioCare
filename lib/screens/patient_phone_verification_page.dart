@@ -25,7 +25,8 @@ class _PatientPhoneVerificationPageState extends State<PatientPhoneVerificationP
     return Scaffold(
       body: Stack(
         children: [
-          const AnimatedBg(),
+          // Fix: use the correct animated background widget and provide a child
+          const AnimatedBackgroundWidget(child: SizedBox.expand()),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -80,20 +81,20 @@ class _PatientPhoneVerificationPageState extends State<PatientPhoneVerificationP
                               onPressed: _isLoading
                                   ? null
                                   : () {
-                                      if (_formKey.currentState!.validate()) {
-                                        setState(() => _isLoading = true);
-                                        // Here you would typically implement phone verification
-                                        // For now, we'll just proceed to registration
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => PatientRegisterPage(
-                                              phoneNumber: _phoneController.text,
-                                            ),
-                                          ),
-                                        ).then((_) => setState(() => _isLoading = false));
-                                      }
-                                    },
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() => _isLoading = true);
+                                  // Here you would typically implement phone verification
+                                  // For now, we'll just proceed to registration
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PatientRegisterPage(
+                                        phoneNumber: _phoneController.text,
+                                      ),
+                                    ),
+                                  ).then((_) => setState(() => _isLoading = false));
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -102,9 +103,9 @@ class _PatientPhoneVerificationPageState extends State<PatientPhoneVerificationP
                               child: _isLoading
                                   ? const CircularProgressIndicator(color: Colors.white)
                                   : const Text(
-                                      'Continue',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
+                                'Continue',
+                                style: TextStyle(fontSize: 18),
+                              ),
                             ),
                           ),
                         ],
@@ -119,4 +120,4 @@ class _PatientPhoneVerificationPageState extends State<PatientPhoneVerificationP
       ),
     );
   }
-} 
+}

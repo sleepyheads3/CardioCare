@@ -12,7 +12,8 @@ class GuardianDashboard extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          const AnimatedBg(),
+          // Fix: Use the correct animated background widget and provide a non-null child
+          const AnimatedBackgroundWidget(child: SizedBox.expand()),
           Center(
             child: StreamBuilder(
               stream: _dbService.getPatientVitals(patientId).onValue,

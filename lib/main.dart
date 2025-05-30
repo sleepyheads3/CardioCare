@@ -1,30 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/role_selection_page.dart';
+import 'screens/patient_login_page.dart';
+import 'screens/guardian_login_page.dart';
+import 'screens/home_page.dart';
 
 void main() async {
-  try {
-    WidgetsFlutterBinding.ensureInitialized();
-    
-    // Check if Firebase is already initialized
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          databaseURL: 'https://moniter-66b79-default-rtdb.firebaseio.com/',
-          apiKey: 'AIzaSyBWNQZU8qCvIV0o04MKjarA45_oQjYrQfY',
-          appId: '1:176979030042:android:531d2d1f884cc82835e1a3',
-          messagingSenderId: '176979030042',
-          projectId: 'moniter-66b79',
-          storageBucket: 'moniter-66b79.firebasestorage.app',
-        ),
-      );
-    } else {
-      // If Firebase is already initialized, get the default app
-      Firebase.app();
-    }
-  } catch (e) {
-    debugPrint('Firebase initialization error: $e');
-  }
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const HeartHealthApp());
 }
 
@@ -36,10 +19,26 @@ class HeartHealthApp extends StatelessWidget {
     return MaterialApp(
       title: 'Heart Health Monitor',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.red,
-      ),
-      home: const RoleSelectionPage(),
+      theme: ThemeData(primarySwatch: Colors.red),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const RoleSelectionPage(),
+        '/patient-login': (context) => const PatientLoginPage(),
+        '/guardian-login': (context) => const GuardianLoginPage(),
+        // '/home' route will be accessed with arguments
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/home') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => HomePage(
+              userId: args['userId'],
+              isPatient: args['isPatient'],
+            ),
+          );
+        }
+        return null;
+      },
     );
   }
 }
