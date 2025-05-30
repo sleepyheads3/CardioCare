@@ -5,7 +5,7 @@ import 'guardian_register_page.dart';
 
 class RoleSelectionPage extends StatelessWidget {
   const RoleSelectionPage({super.key});
-
+  final gunmetal = const Color(0xFF333333);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,21 +17,21 @@ class RoleSelectionPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     'Welcome to Heart Health Monitor',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Colors.red,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 40),
-                  const Text(
+                  Text(
                     'Please select your role',
                     style: TextStyle(
                       fontSize: 18,
-                      color: Colors.white70,
+                      color: gunmetal,
                     ),
                   ),
                   const SizedBox(height: 40),

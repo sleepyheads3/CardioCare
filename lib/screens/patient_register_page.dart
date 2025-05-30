@@ -7,7 +7,7 @@ import '../widgets/animated_background.dart';
 
 class PatientRegisterPage extends StatefulWidget {
   final String phoneNumber;
-  
+
   const PatientRegisterPage({
     super.key,
     required this.phoneNumber,
@@ -121,64 +121,64 @@ class _PatientRegisterPageState extends State<PatientRegisterPage> {
                               onPressed: _isLoading
                                   ? null
                                   : () async {
-                                      if (_formKey.currentState!.validate()) {
-                                        setState(() => _isLoading = true);
-                                        try {
-                                          // Generate unique Patient ID
-                                          patientId = 'P${const Uuid().v4().substring(0, 6).toUpperCase()}';
-                                          await _authService.registerWithEmail('${widget.phoneNumber}@hhm.com', password);
-                                          await _dbService.createPatient({
-                                            'id': patientId,
-                                            'name': name,
-                                            'age': age,
-                                            'gender': gender,
-                                            'mobile': widget.phoneNumber,
-                                            'guardianMobile': guardianMobile,
-                                          }, patientId!);
-                                          
-                                          if (!mounted) return;
-                                          
-                                          showDialog(
-                                            context: context,
-                                            builder: (_) => AlertDialog(
-                                              title: const Text('Registration Successful'),
-                                              content: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text('Your registration is complete!'),
-                                                  const SizedBox(height: 10),
-                                                  Text('Patient ID: $patientId'),
-                                                  const SizedBox(height: 10),
-                                                  const Text('Please save this ID for future reference.'),
-                                                ],
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  child: const Text('OK'),
-                                                  onPressed: () {
-                                                    Navigator.pop(context);
-                                                    Navigator.pushReplacement(
-                                                      context,
-                                                      MaterialPageRoute(builder: (_) => const PatientLoginPage()),
-                                                    );
-                                                  },
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        } catch (e) {
-                                          if (!mounted) return;
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('Error: $e')),
-                                          );
-                                        } finally {
-                                          if (mounted) {
-                                            setState(() => _isLoading = false);
-                                          }
-                                        }
-                                      }
-                                    },
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() => _isLoading = true);
+                                  try {
+                                    // Generate unique Patient ID
+                                    patientId = 'P${const Uuid().v4().substring(0, 6).toUpperCase()}';
+                                    await _authService.registerWithEmail('${widget.phoneNumber}@hhm.com', password);
+                                    await _dbService.createPatient({
+                                      'id': patientId,
+                                      'name': name,
+                                      'age': age,
+                                      'gender': gender,
+                                      'mobile': widget.phoneNumber,
+                                      'guardianMobile': guardianMobile,
+                                    }, patientId!);
+
+                                    if (!mounted) return;
+
+                                    showDialog(
+                                      context: context,
+                                      builder: (_) => AlertDialog(
+                                        title: const Text('Registration Successful'),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text('Your registration is complete!'),
+                                            const SizedBox(height: 10),
+                                            Text('Patient ID: $patientId'),
+                                            const SizedBox(height: 10),
+                                            const Text('Please save this ID for future reference.'),
+                                          ],
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            child: const Text('OK'),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              Navigator.pushReplacement(
+                                                context,
+                                                MaterialPageRoute(builder: (_) => const PatientLoginPage()),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error: $e')),
+                                    );
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _isLoading = false);
+                                    }
+                                  }
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -187,10 +187,19 @@ class _PatientRegisterPageState extends State<PatientRegisterPage> {
                               child: _isLoading
                                   ? const CircularProgressIndicator(color: Colors.white)
                                   : const Text(
-                                      'Complete Registration',
-                                      style: TextStyle(fontSize: 18),
-                                    ),
+                                'Complete Registration',
+                                style: TextStyle(fontSize: 18),
+                              ),
                             ),
+                          ),
+                          TextButton(
+                            child: const Text('Already have an account? Login'),
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (_) => const PatientLoginPage()),
+                              );
+                            },
                           ),
                         ],
                       ),
