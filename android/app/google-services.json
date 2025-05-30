@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "176979030042",
+    "project_id": "moniter-66b79",
+    "storage_bucket": "moniter-66b79.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:176979030042:android:531d2d1f884cc82835e1a3",
+        "android_client_info": {
+          "package_name": "com.example.heart_health2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWNQZU8qCvIV0o04MKjarA45_oQjYrQfY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:176979030042:android:334bf81526c12a8435e1a3",
+        "android_client_info": {
+          "package_name": "com.example.moniter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWNQZU8qCvIV0o04MKjarA45_oQjYrQfY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

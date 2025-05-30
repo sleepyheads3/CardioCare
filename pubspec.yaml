@@ -1,0 +1,19 @@
+name: heart_health
+description: Heart Health Monitoring App using Flutter & Firebase
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.4
+  firebase_database: ^11.3.6
+  provider: ^6.1.2
+  uuid: ^4.3.3
+  animated_background: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
