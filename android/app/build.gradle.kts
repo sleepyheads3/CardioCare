@@ -22,7 +22,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.heart_health2"
-        minSdk=23
+        minSdk=26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
