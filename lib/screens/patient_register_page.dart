@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import 'patient_login_page.dart';
+import 'home_page.dart';
 import '../widgets/animated_background.dart';
 
 class PatientRegisterPage extends StatefulWidget {
@@ -22,17 +23,22 @@ class _PatientRegisterPageState extends State<PatientRegisterPage> {
   final _authService = AuthService();
   final _dbService = DatabaseService();
 
-  String name = '', gender = '', guardianMobile = '', password = '';
+  String name = '';
+  String gender = '';
+  String guardianMobile = '';
+  String password = '';
   int age = 0;
   String? patientId;
   bool _isLoading = false;
+
+  // For gender selection
+  String? _selectedGender; // 'M' or 'F'
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          // Provide a non-null child for AnimatedBackgroundWidget
           const AnimatedBackgroundWidget(child: SizedBox.expand()),
           SafeArea(
             child: Center(
@@ -80,17 +86,44 @@ class _PatientRegisterPageState extends State<PatientRegisterPage> {
                             ),
                             keyboardType: TextInputType.number,
                             onChanged: (v) => age = int.tryParse(v) ?? 0,
-                            validator: (v) => v!.isEmpty ? 'Please enter your age' : null,
+                            validator: (v) {
+                              if (v == null || v.isEmpty) return 'Please enter your age';
+                              final val = int.tryParse(v);
+                              if (val == null || val < 1) return 'Enter a valid age';
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 16),
-                          TextFormField(
+                          // Gender Selection
+                          InputDecorator(
                             decoration: const InputDecoration(
-                              labelText: 'Gender',
-                              prefixIcon: Icon(Icons.people),
+                              labelText: 'Sex',
+                              prefixIcon: Icon(Icons.wc),
                               border: OutlineInputBorder(),
                             ),
-                            onChanged: (v) => gender = v,
-                            validator: (v) => v!.isEmpty ? 'Please enter your gender' : null,
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _selectedGender,
+                                isExpanded: true,
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'M',
+                                    child: Text('Male'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'F',
+                                    child: Text('Female'),
+                                  ),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedGender = value;
+                                    gender = value ?? '';
+                                  });
+                                },
+                                hint: const Text("Select Sex"),
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
@@ -122,17 +155,21 @@ class _PatientRegisterPageState extends State<PatientRegisterPage> {
                               onPressed: _isLoading
                                   ? null
                                   : () async {
-                                if (_formKey.currentState!.validate()) {
+                                if (_formKey.currentState!.validate() && _selectedGender != null) {
                                   setState(() => _isLoading = true);
                                   try {
                                     // Generate unique Patient ID
                                     patientId = 'P${const Uuid().v4().substring(0, 6).toUpperCase()}';
+
+                                    // Register user with email (email is phone@hhm.com)
                                     await _authService.registerWithEmail('${widget.phoneNumber}@hhm.com', password);
+
+                                    // Save patient data by patientId (not phone)
                                     await _dbService.createPatient({
                                       'id': patientId,
                                       'name': name,
                                       'age': age,
-                                      'gender': gender,
+                                      'gender': _selectedGender, // Will be either 'M' or 'F'
                                       'mobile': widget.phoneNumber,
                                       'guardianMobile': guardianMobile,
                                     }, patientId!);
@@ -161,7 +198,12 @@ class _PatientRegisterPageState extends State<PatientRegisterPage> {
                                               Navigator.pop(context);
                                               Navigator.pushReplacement(
                                                 context,
-                                                MaterialPageRoute(builder: (_) => const PatientLoginPage()),
+                                                MaterialPageRoute(
+                                                  builder: (_) => HomePage(
+                                                    userId: patientId!,
+                                                    isPatient: true,
+                                                  ),
+                                                ),
                                               );
                                             },
                                           ),
@@ -178,6 +220,10 @@ class _PatientRegisterPageState extends State<PatientRegisterPage> {
                                       setState(() => _isLoading = false);
                                     }
                                   }
+                                } else if (_selectedGender == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Please select your Sex')),
+                                  );
                                 }
                               },
                               style: ElevatedButton.styleFrom(
