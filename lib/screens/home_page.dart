@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:convert';
+import '../services/ml_service.dart';
+import '../widgets/emergency_panel.dart';
+import '../screens/emergency_contacts_page.dart';
+import '../models/emergency_contact.dart';
+import '../models/risk_type.dart';
+import '../services/database_service.dart';
 
 class HomePage extends StatefulWidget {
   final String? userId;
@@ -17,10 +23,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String temperature = "Waiting...";
   String heartRate = "Waiting...";
   String spo2 = "Waiting...";
+  String heartRisk = "Waiting for data...";
   String connectionStatus = "🔌 Disconnected";
   BluetoothConnection? connection;
   List<BluetoothDevice> _devicesList = [];
   BluetoothDevice? _selectedDevice;
+  final MLService _mlService = MLService();
+  bool _isModelInitialized = false;
+  final DatabaseService _dbService = DatabaseService();
+  List<EmergencyContact> _emergencyContacts = [];
 
   late AnimationController _pulseController;
 
@@ -28,6 +39,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     requestPermissions().then((_) => getBondedDevices());
+    _initializeMLModel();
+    _loadEmergencyContacts();
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -36,10 +49,34 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  Future<void> _loadEmergencyContacts() async {
+    if (widget.userId == null) return;
+    try {
+      final contacts = await _dbService.getEmergencyContacts(widget.userId!);
+      setState(() {
+        _emergencyContacts = contacts;
+      });
+    } catch (e) {
+      print('Error loading emergency contacts: $e');
+    }
+  }
+
+  Future<void> _initializeMLModel() async {
+    try {
+      await _mlService.initialize();
+      setState(() {
+        _isModelInitialized = true;
+      });
+    } catch (e) {
+      print('Error initializing ML model: $e');
+    }
+  }
+
   @override
   void dispose() {
     _pulseController.dispose();
     connection?.dispose();
+    _mlService.dispose();
     super.dispose();
   }
 
@@ -90,23 +127,33 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           try {
             final parsed = jsonDecode(jsonString);
             if (parsed is Map<String, dynamic>) {
+              double? temp, hr, sp;
+              
               setState(() {
                 if (parsed.containsKey("temperature")) {
+                  temp = double.tryParse(parsed["temperature"].toString());
                   temperature = "${parsed["temperature"]} °F";
                   _animatePulse();
                 }
                 if (parsed.containsKey("heartRate")) {
+                  hr = double.tryParse(parsed["heartRate"].toString());
                   heartRate = "${parsed["heartRate"]} bpm";
                   _animatePulse();
                 }
                 if (parsed.containsKey("spo2")) {
+                  sp = double.tryParse(parsed["spo2"].toString());
                   spo2 = "${parsed["spo2"]} %";
                   _animatePulse();
                 }
               });
+
+              // Update heart risk prediction if all values are available and valid
+              if (temp != null && hr != null && sp != null) {
+                _updateHeartRisk(temp!, hr!, sp!);
+              }
             }
           } catch (e) {
-            // Ignore invalid JSON
+            print('Error processing data: $e');
           }
         }
       })
@@ -123,6 +170,48 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         connectionStatus = "🔴 Connection Failed";
       });
     }
+  }
+
+  void _updateHeartRisk(double temp, double hr, double sp) {
+    if (!_isModelInitialized) return;
+
+    try {
+      final prediction = _mlService.predictHeartCondition(temp, sp, hr);
+      setState(() {
+        heartRisk = prediction;
+      });
+
+      // Show emergency panel for high risk
+      if (prediction == 'High Risk') {
+        _showEmergencyPanel();
+      }
+    } catch (e) {
+      print('Error predicting heart risk: $e');
+    }
+  }
+
+  void _showEmergencyPanel() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: EmergencyPanel(
+            patientId: widget.userId ?? '',
+            emergencyContacts: _emergencyContacts,
+            riskLevel: heartRisk,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget buildDataCard(String title, String value, IconData icon, Color color) {
@@ -223,34 +312,112 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       appBar: AppBar(
         title: Text((isPatient ? "Patient" : "Guardian") + " Home"),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.emergency),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EmergencyContactsPage(
+                    patientId: userId,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            Text(
-              "ID: $userId",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            Card(
+              elevation: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Patient ID",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      userId,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Text(
               "Connection Status: $connectionStatus",
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
             buildDataCard(
-              "🌡 Temperature",
+              "Temperature",
               temperature,
               Icons.thermostat,
               Colors.deepOrange,
             ),
             buildDataCard(
-              "❤ Heart Rate",
+              "Heart Rate",
               heartRate,
               Icons.favorite,
               Colors.red,
             ),
-            buildDataCard("🩸 SpO2", spo2, Icons.bloodtype, Colors.blue),
+            buildDataCard(
+              "SpO2",
+              spo2,
+              Icons.bloodtype,
+              Colors.blue,
+            ),
+            const SizedBox(height: 16),
+            Card(
+              elevation: 6,
+              shadowColor: Colors.purple.withOpacity(0.3),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Heart Risk Assessment",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      heartRisk,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: heartRisk == "High Risk"
+                            ? Colors.red
+                            : heartRisk == "Medium Risk"
+                                ? Colors.orange
+                                : Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               icon: const Icon(Icons.refresh),
